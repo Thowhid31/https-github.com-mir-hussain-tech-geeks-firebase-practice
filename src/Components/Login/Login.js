@@ -1,78 +1,114 @@
-import React from "react";
+import React, { useState } from "react";
 import "./AuthForm.css";
 import GoogleLogo from "../../Assets/Image/google.svg";
 import { useNavigate } from "react-router-dom";
-import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
 import auth from "../../firebase.init";
+import toast from "react-hot-toast";
+import { AiOutlineExclamationCircle } from "react-icons/ai";
+
+const provider = new GoogleAuthProvider();
 
 const Login = () => {
-
-  const provider = new GoogleAuthProvider();
   const navigate = useNavigate();
+  const [email, setEmail] = useState({ value: "", error: "" });
+  const [password, setPassword] = useState({ value: "", error: "" });
 
   const googleAuth = () => {
     signInWithPopup(auth, provider)
-    .then((result) => {
-      // This gives you a Google Access Token. You can use it to access the Google API.
-      // const credential = GoogleAuthProvider.credentialFromResult(result);
-      // const token = credential.accessToken;
-      // The signed-in user info.
-      const user = result.user;
-      console.log(user);
-      navigate('/')
-      // ...
-    }).catch((error) => {
-      // Handle Errors here.
-      // const errorCode = error.code;
-      // const errorMessage = error.message;
-      // The email of the user's account used.
-      // const email = error.email;
-      // The AuthCredential type that was used.
-      // const credential = GoogleAuthProvider.credentialFromError(error);
-      // ...
+      .then((result) => {
+        const user = result.user;
+        // ...
+        console.log(user);
+        navigate("/");
+      })
+      .catch((error) => {
+        // Handle Errors here.
+        console.error(error);
+      });
+  };
 
-    });
+  const handleEmail = (event) => {
+    const emailInput = event.target.value;
 
-  }
+    if (/\S+@\S+\.\S+/.test(emailInput)) {
+      setEmail({ value: emailInput, error: "" });
+    } else {
+      setEmail({ value: "", error: "Please Provide a valid Email" });
+    }
+  };
 
+  const handlePassword = (event) => {
+    const passwordInput = event.target.value;
 
-  const handleLogIn = (event) => {
+    setPassword({ value: passwordInput, error: "" });
+  };
+
+  const handleLogin = (event) => {
     event.preventDefault();
-    const email = event.target.email.value;
-    const password = event.target.password.value;
 
-    signInWithEmailAndPassword(auth, email, password)
-  .then((userCredential) => {
-    // Signed in 
-    const user = userCredential.user;
-    // ...
-    console.log(email);
-    console.log(password);
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    console.log(errorMessage);
-  });
-  }
-  
+    if (email.value === "") {
+      setEmail({ value: "", error: "Email is required" });
+    }
+
+    if (password.value === "") {
+      setPassword({ value: "", error: "Password is required" });
+    }
+
+    if (email.value && password.value) {
+      signInWithEmailAndPassword(auth, email.value, password.value)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log(user);
+          navigate("/");
+        })
+        .catch((error) => {
+          const errorMessage = error.message;
+
+          if (errorMessage.includes("wrong-password")) {
+            toast.error("Wrong Password", { id: "error" });
+          } else {
+            toast.error(errorMessage, { id: "error" });
+          }
+        });
+    }
+  };
 
   return (
     <div className='auth-form-container '>
       <div className='auth-form'>
         <h1>Login</h1>
-        <form onSubmit={handleLogIn}>
+        <form onSubmit={handleLogin}>
           <div className='input-field'>
             <label htmlFor='email'>Email</label>
             <div className='input-wrapper'>
-              <input type='text' name='email' id='email' />
+              <input type='text' name='email' onBlur={handleEmail} id='email' />
             </div>
+            {email.error && (
+              <p className='error'>
+                <AiOutlineExclamationCircle /> {email.error}
+              </p>
+            )}
           </div>
           <div className='input-field'>
             <label htmlFor='password'>Password</label>
             <div className='input-wrapper'>
-              <input type='password' name='password' id='password' />
+              <input
+                type='password'
+                onBlur={handlePassword}
+                name='password'
+                id='password'
+              />
             </div>
+            {password.error && (
+              <p className='error'>
+                <AiOutlineExclamationCircle /> {password.error}
+              </p>
+            )}
           </div>
           <button type='submit' className='auth-form-submit'>
             Login
@@ -88,7 +124,7 @@ const Login = () => {
           <div className='line-right' />
         </div>
         <div className='input-wrapper'>
-          <button onClick={googleAuth} className='google-auth'>
+          <button className='google-auth' onClick={googleAuth}>
             <img src={GoogleLogo} alt='' />
             <p> Continue with Google </p>
           </button>

@@ -8,26 +8,30 @@ import auth from "../../firebase.init";
 
 const Navbar = () => {
   const { pathname } = useLocation();
-  const [user, setUser] = useState({})
+  const [currentUser, setCurrentUser] = useState({});
+  console.log(currentUser);
 
-  useEffect(() =>{
-    onAuthStateChanged(auth, (user) => {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUser(user);
-        // ...
+        setCurrentUser(user);
       } else {
-        setUser({})
+        setCurrentUser({});
       }
     });
-  }, [])
 
-  const handleLogOut = () => {
-    signOut(auth).then(() => {
-      // Sign-out successful.
-    }).catch((error) => {
-      // An error happened.
-    });
-  }
+    return () => unsubscribe;
+  }, []);
+
+  const handleLogout = () => {
+    signOut(auth)
+      .then(() => {
+        // Sign-out successful.
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   return (
     <nav
@@ -51,13 +55,18 @@ const Navbar = () => {
         >
           Videos
         </NavLink>
-        
-        {user?.uid ? <button onClick={handleLogOut} className='logout-button'>LogOut</button>: <NavLink
-          className={({ isActive }) => (isActive ? "active-link" : "link")}
-          to='/login'
-        >
-          Login
-        </NavLink>}
+        {currentUser?.email ? (
+          <button onClick={handleLogout} className='logout-button'>
+            Logout
+          </button>
+        ) : (
+          <NavLink
+            className={({ isActive }) => (isActive ? "active-link" : "link")}
+            to='/login'
+          >
+            Login
+          </NavLink>
+        )}
       </div>
     </nav>
   );
