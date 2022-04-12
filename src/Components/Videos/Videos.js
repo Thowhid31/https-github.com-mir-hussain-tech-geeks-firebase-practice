@@ -4,14 +4,14 @@ const Videos = () => {
   return (
     <div>
       <h1>This is videos page</h1>
-      {/* <iframe
+      <iframe
         width='890'
         height='500'
         src='https://www.youtube.com/embed/XKfgdkcIUxw'
         title='YouTube video player'
         frameBorder='0'
         allowFullScreen
-      ></iframe> */}
+      ></iframe>
     </div>
   );
 };
